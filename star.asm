@@ -16,7 +16,7 @@ cursor_buffer = $1260 ; + 32
 cursor_buffer_h = $1280 ; + 32
 bitmask_buffer = $12a0 ; + 32
 
-size = 3
+size = 32
 
       jsr init     
       jsr blank_video
@@ -280,7 +280,7 @@ x_bit_set
       !byte $80,$40,$20,$10,$08,$04,$02,$01
 x_bit_clear
       !byte $7F,$BF,$DF,$EF,$F7,$FB,$FD,$FE
-y_screen
+y_screen ; *40 lookup for screen memory
       !byte $00,$28,$50,$78,$A0,$C8,$F0,$18
       !byte $40,$68,$90,$B8,$E0,$08,$30,$58
       !byte $80,$A8,$D0,$F8,$20,$48,$70,$98
