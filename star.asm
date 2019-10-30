@@ -1,4 +1,6 @@
-*=$1000
+*=$0801
+  !byte $0c,$08,$0a,$00,$9e,$20,$32,$33,$30,$34,$00,$00,$00 ; basic auto start at $0900 
+
 screen_color = $f7;
 color = $f8;
 color_h = $f9;
@@ -18,6 +20,7 @@ bitmask_buffer = $12a0 ; + 32
 
 size = 32
 
+*=$0900
       jsr init     
       jsr blank_video
       jsr blank_screen
