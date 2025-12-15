@@ -1,6 +1,7 @@
 *=$0801
   !byte $0c,$08,$0a,$00,$9e,$20,$32,$33,$30,$34,$00,$00,$00 ; basic auto start at $0900 
 
+parity = $f6; Track odd/even frames
 screen_color = $f7;
 color = $f8;
 color_h = $f9;
@@ -26,13 +27,20 @@ size = 32
       jsr blank_screen
       jsr init_starfield
 move_loop
-      jsr draw_stars
       jsr move_stars
+      jsr draw_stars
+      lda parity ; Flip the parity bit each frame
+      clc
+      adc #1
+      and #%00000001
+      sta parity
 vsync_wait      
       lda $d012
+      cmp #$ff
       bne vsync_wait
       jmp move_loop
-      
+
+
 init
       lda $d018
       ora #$8 ; Set video base to 8192
@@ -42,7 +50,7 @@ init
       sta $d020; set border color
       lda $d011
       ora #$20 ; set high res mode
-      sta $d011 
+      sta $d011
       rts
       
 blank_video
@@ -99,6 +107,8 @@ draw_star
       lda cursor_buffer, y
       sta cursor_clear
       lda bitmask_buffer, y
+      cmp x_bit_clear, x ; Check to see if it will change
+      beq save_cursor ; Skip if bitmask is the same
       sta bitmask_clear
       tya
       pha
@@ -121,34 +131,39 @@ save_cursor
       rts
       
 move_stars
-       ldx #0
+      ldx #0
 move_next
-       lda y_pos, x ; velocity of 1 or 2 based on y position
-       and #%00000001
-       clc
-       adc #1
-       sta velocity
-       lda x_pos, x
-       sec
-       sbc velocity
-       sta x_pos, x
-       bcs continue_move
-       lda x_pos_h, x
-       beq new_star
-       sbc #0
-       sta x_pos_h, x
-       jmp continue_move
+      lda y_pos, x ; velocity of 1-4 based on y position
+      and #%00000011
+      clc
+      adc #1
+      lsr ; half speed
+      bcc skip_even 
+      clc
+      adc parity ; Add the last bit for odd frames
+skip_even
+      sta velocity
+      lda x_pos, x
+      sec
+      sbc velocity
+      sta x_pos, x
+      bcs continue_move
+      lda x_pos_h, x
+      beq new_star
+      sbc #0
+      sta x_pos_h, x
+      jmp continue_move
 new_star
-       jsr regen_y
-       lda #63 ; move x to pos 319
-       sta x_pos, x
-       lda #1
-       sta x_pos_h, x
+      jsr regen_y
+      lda #63 ; move x to pos 319
+      sta x_pos, x
+      lda #1
+      sta x_pos_h, x
 continue_move       
-       inx
-       cpx #size
-       bcc move_next
-       rts
+      inx
+      cpx #size
+      bcc move_next
+      rts
 
 plot_star
       ; Calculate y
@@ -265,7 +280,7 @@ init_star ; generate new star at offset x
       sta x_pos_h, x
 regen_y
       jsr rnd
-      lda $63
+      lda $64
       cmp #200
       bcs regen_y ; a >= 200
       sta y_pos, x
@@ -291,5 +306,5 @@ y_screen ; *40 lookup for screen memory
 y_screen_h
       !byte $00,$00,$00,$00,$00,$00,$00,$01
       !byte $01,$01,$01,$01,$01,$02,$02,$02
-      !byte $02,$02,$02,$02,$02,$03,$03,$03
+      !byte $02,$02,$02,$02,$03,$03,$03,$03
       !byte $03

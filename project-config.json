@@ -1,0 +1,13 @@
+{
+    "name": "starfield",
+    "description": "Project starfield",
+    "toolkit": "acme",
+    "sources": [
+        "star.asm"
+    ],
+    "build": "debug",
+    "definitions": [],
+    "includes": [],
+    "args": [],
+    "compiler": ""
+}
